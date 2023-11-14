@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace c__Project_2
 {
@@ -18,7 +18,7 @@ namespace c__Project_2
             string[] arrayOfLetter = new string[n];
             int letterIndex = 0;
 
-            Print("\n\n------------------------------\n");
+            Print("\n------------------------------\n");
 
             do
             {
@@ -54,14 +54,6 @@ namespace c__Project_2
 
             for(int i = 0; i < n - 1; ++i)
                 arrayOfInfo[n - 1][i] = arrayOfInfo[i][n - 2];
-            
-            ///////////////////////////////////////////////////
-
-            //for(int i = 0; i < n; ++i)
-            //{
-            //    for(int j = 0; j < n - 1; ++j)
-            //        Print($"arrayOfInfo[{i}][{j}] = {arrayOfInfo[i][j]}\n\n");
-            //}
 
             Print("\n------------------------------\n\n");
             Print("Chon diem bat dau: ");
@@ -81,8 +73,8 @@ namespace c__Project_2
                 if (end == arrayOfLetter[i]) numEnd = i;
             }
 
-            Print($"Diem bat dau la {start} va numStart = {numStart}\n\n");
-            Print($"Diem ket thuc la {end} va numEnd = {numEnd}\n\n");
+            Print($"Diem bat dau la {start}\n\n");
+            Print($"Diem ket thuc la {end}\n\n"); 
             Print("------------------------------\n\n");
 
             int lastIndex = --n;
@@ -95,8 +87,6 @@ namespace c__Project_2
             }
 
             int min = arrayOfPosLen[0][0, 0], m = 0;
-
-            Console.ForegroundColor = ConsoleColor.White;
 
             Print("\n------------------------------\n\n");
             Print($"Danh sach chieu dai va duong di tu {start} den {end}: \n\n");
@@ -137,8 +127,6 @@ namespace c__Project_2
 
             for (int i = newArray[newArray.Length - 2] + 1; i <= lastIndex; ++i)
             {
-                Console.ForegroundColor = ConsoleColor.White;
-
                 newArray[newArray.Length - 1] = i;
                 int[] oldArray = new int[newArray.Length];
 
@@ -180,9 +168,6 @@ namespace c__Project_2
                             }
 
                             totalLength += int.Parse(arrayOfInfo[newArray[k]][newArray[k + 1] - 1]);
-
-                            Print($"arrayOfInfo[{newArray[k]}][{newArray[k + 1] - 1}] = {arrayOfInfo[newArray[k]][newArray[k + 1] - 1]}\n");
-                            Print($"Length = {totalLength}\n\n");
                         }
                         else if (newArray[k] > newArray[k + 1])
                         {
@@ -192,24 +177,16 @@ namespace c__Project_2
                             }
 
                             totalLength += int.Parse(arrayOfInfo[newArray[k]][newArray[k + 1]]);
-
-                            Print($"arrayOfInfo[{newArray[k]}][{newArray[k + 1]}] = {arrayOfInfo[newArray[k]][newArray[k + 1]]}\n");
-                            Print($"Length = {totalLength}\n\n");
                         }
 
                         ++k;
                     }
 
-                    if (checkIfError == true)
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        Print("Error: ko the tinh toan\n\n\n");
-                    }
+                    if (checkIfError == true) Print("Error: ko the tinh toan\n\n\n");
                     else
                     {
                         if (newArray[0] == numStart && newArray[newArray.Length - 1] == numEnd)
                         {
-                            Console.ForegroundColor = ConsoleColor.Green;
                             Print($"Chieu dai la {totalLength}\n\n\n");
 
                             arrayOfPosLen[bigPosIndex] = new int[2, newArray.Length];
@@ -220,11 +197,7 @@ namespace c__Project_2
 
                             ++bigPosIndex;
                         }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Print($"Chieu dai la {totalLength}\n\n\n");
-                        }
+                        else Print($"Chieu dai la {totalLength}\n\n\n");
                     }
 
                     newArray = Permutation(newArray);
@@ -267,24 +240,16 @@ namespace c__Project_2
                                 }
 
                                 totalLength += int.Parse(arrayOfInfo[newArray[k]][newArray[k + 1]]);
-
-                                Print($"arrayOfInfo[{newArray[k]}][{newArray[k + 1]}] = {arrayOfInfo[newArray[k]][newArray[k + 1]]}\n");
-                                Print($"Length = {totalLength}\n\n");
                             }
 
                             ++k;
                         }
 
-                        if (checkIfError == true)
-                        {
-                            Console.ForegroundColor = ConsoleColor.DarkYellow;
-                            Print("Error: ko the tinh toan\n\n\n");
-                        }
+                        if (checkIfError == true) Print("Error: ko the tinh toan\n\n\n");
                         else
                         {
                             if (newArray[0] == numStart && newArray[newArray.Length - 1] == numEnd)
                             {
-                                Console.ForegroundColor = ConsoleColor.Green;
                                 Print($"Chieu dai la {totalLength}\n\n\n");
 
                                 arrayOfPosLen[bigPosIndex] = new int[2, newArray.Length];
@@ -295,14 +260,9 @@ namespace c__Project_2
 
                                 ++bigPosIndex;
                             }
-                            else
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Print($"Chieu dai la {totalLength}\n\n\n");
-                            }
+                            else Print($"Chieu dai la {totalLength}\n\n\n");
                         }
                     }
-                    //end
                 }
 
                 newArray = oldArray;
