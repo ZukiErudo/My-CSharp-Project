@@ -1,0 +1,592 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+
+namespace C__Project_1
+{
+    class PositionXY
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+
+        public PositionXY(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
+    class State
+    {
+        public int WhiteSpaceRow { get; set; }
+        public int WhiteSpaceCol { get; set; }
+        public string[,] Matrix { get; set; }
+        public List<string> Actions { get; set; } = new List<string>();
+        public string Recent_action { get; set; } = "";
+        public Dictionary<string, PositionXY> Position_Index { get; set; } = new Dictionary<string, PositionXY>();
+
+        public State(string[,] matrix)
+        {
+            Matrix = new string[matrix.GetLength(0), matrix.GetLength(1)];
+            CopyMatrix(matrix);
+            Find_white_space();
+            Find_actions();
+            Find_Index();
+        }
+
+        private void Find_Index()
+        {
+            for(int i = 0; i < Matrix.GetLength(0); ++i)
+            {
+                for (int j = 0; j < Matrix.GetLength(1); ++j)
+                {
+                    Position_Index.Add(Matrix[i, j], new PositionXY(i, j));
+                }
+            }
+        }
+
+        private void Find_actions()
+        {
+            if (Able_to_move_up())
+                Actions.Add("Up");
+
+            if (Able_to_move_down())
+                Actions.Add("Down");
+
+            if (Able_to_move_left())
+                Actions.Add("Left");
+
+            if (Able_to_move_right())
+                Actions.Add("Right");
+        }
+
+        public static string Choosing_action(State current_state, State goal_state)
+        {
+            int v = int.MaxValue;
+            string action = "";
+
+            foreach(string a in current_state.Actions)
+            {
+                int v1 = State.Heuristic_cost(State.New_State(current_state, a), goal_state);
+                
+                if(v1 < v)
+                {
+                    v = v1;
+                    action = a;
+                }
+                else if (v1 == v)
+                {
+                    Random random = new Random();
+                    if(random.Next(0, 101) >= 60)
+                    {
+                        v = v1;
+                        action = a;
+                    }
+                }
+            }
+
+            return action;
+        }
+
+        public static int Heuristic_cost(State current_state, State goal_state)
+        {
+            int val = 0;
+
+            for(int i = 0; i < current_state.Matrix.GetLength(0); ++i)
+            {
+                for(int j = 0; j < current_state.Matrix.GetLength(1); ++j)
+                {
+                    if (current_state.Matrix[i, j] != "")
+                    {
+                        val += Math.Abs(i - goal_state.Position_Index[current_state.Matrix[i, j]].X)
+                              + Math.Abs(j - goal_state.Position_Index[current_state.Matrix[i, j]].Y);
+                    }
+                }
+            }
+
+            return val;
+        }
+
+        public static State New_State(State current_state, string action)
+        {
+            string[,] new_matrix = new string[current_state.Matrix.GetLength(0), current_state.Matrix.GetLength(1)];
+            
+            for(int i = 0; i < new_matrix.GetLength(0); ++i)
+            {
+                for(int j = 0; j < new_matrix.GetLength(1); ++j)
+                {
+                    new_matrix[i, j] = current_state.Matrix[i, j];
+                }
+            }
+
+            string recent_action = "";
+            int current_row = current_state.WhiteSpaceRow;
+            int current_col = current_state.WhiteSpaceCol;
+
+            if(action == "Up")
+            {
+                recent_action = "Down";
+                new_matrix[current_row, current_col] = current_state.Matrix[current_row - 1, current_col];
+                new_matrix[current_row - 1, current_col] = "";
+            }
+            else if (action == "Down")
+            {
+                recent_action = "Up";
+                new_matrix[current_row, current_col] = current_state.Matrix[current_row + 1, current_col];
+                new_matrix[current_row + 1, current_col] = "";
+            }
+            else if (action == "Left")
+            {
+                recent_action = "Right";
+                new_matrix[current_row, current_col] = current_state.Matrix[current_row, current_col - 1];
+                new_matrix[current_row, current_col - 1] = "";
+            }
+            else if (action == "Right")
+            {
+                recent_action = "Left";
+                new_matrix[current_row, current_col] = current_state.Matrix[current_row, current_col + 1];
+                new_matrix[current_row, current_col + 1] = "";
+            }
+
+            State new_state = new State(new_matrix);
+            new_state.Recent_action = recent_action;
+            new_state.Actions.Remove(recent_action);
+
+            return new_state;
+        }
+
+        public bool Able_to_move_up()
+        {
+            if(WhiteSpaceRow - 1 < 0) return false;
+            else return true;
+        }
+
+        public bool Able_to_move_down() 
+        {
+            if (WhiteSpaceRow + 1 > Matrix.GetLength(0) - 1) return false;
+            else return true;
+        }
+
+        public bool Able_to_move_left()
+        {
+            if (WhiteSpaceCol - 1 < 0) return false;
+            else return true;
+        }
+
+        public bool Able_to_move_right()
+        {
+            if (WhiteSpaceCol + 1 > Matrix.GetLength(1) - 1) return false;
+            else return true;
+        }
+
+        private void Find_white_space()
+        {
+            for(int i = 0; i < Matrix.GetLength(0); ++i)
+            {
+                for(int j = 0; j < Matrix.GetLength(1); ++j)
+                {
+                    if (Matrix[i, j] == "")
+                    {
+                        WhiteSpaceRow = i;
+                        WhiteSpaceCol = j;
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void CopyMatrix(string[,] copied_matrix)
+        {
+            for(int i = 0; i < copied_matrix.GetLength(0); ++i)
+            {
+                for(int j = 0; j < copied_matrix.GetLength(1); ++j)
+                {
+                    Matrix[i, j] = copied_matrix[i, j];
+                }
+            }
+        }
+    }
+
+    class Node
+    {
+        public string Node_ID { get; set; } = "";
+        public string Parent_Node_ID { get; set; } = "";
+        public string Action { get; set; } = "";
+        public int Path_cost { get; set; }
+        public State State { get; set; }
+
+        public Node(string[,] matrix, string p_id, int path_cost, string action)
+        {
+            State = new State(matrix);
+            Create_ID(matrix);
+            Parent_Node_ID = p_id;
+            Path_cost = path_cost;
+            Action = action;
+        }
+
+        public static List<Node> Expansion(Node current_node)
+        {
+            List<Node> list = new List<Node>();
+
+            foreach (string a in current_node.State.Actions)
+            {
+                string p_id = current_node.Node_ID;
+                int cost = current_node.Path_cost + 1;
+
+                list.Add(new Node(State.New_State(current_node.State, a).Matrix, p_id, cost, a));
+            }
+
+            return list;
+        }
+
+        private void Create_ID(string[,] matrix)
+        {
+            for(int i = 0; i < matrix.GetLength(0); ++i)
+            {
+                for(int j = 0; j < matrix.GetLength(1); ++j)
+                {
+                    if (matrix[i, j] == "") Node_ID += "0";
+                    else Node_ID += matrix[i, j];
+                }
+            }
+        }
+    }
+
+    class Priority_queue
+    {
+        public List<Node> queue_list = new List<Node>();
+        public State Goal_state { get; set; }
+
+        public Priority_queue(string[,] goal_matrix)
+        {
+            Goal_state = new State(goal_matrix);
+        }
+
+        public Node Pop()
+        {
+            int v = int.MaxValue;
+            Node node = null;
+            int index = 0;
+
+            for(int i = 0; i < queue_list.Count; ++i)
+            {
+                int v1 = State.Heuristic_cost(queue_list[i].State, Goal_state);
+
+                if(queue_list[i].State.Matrix[0, 0] == "1" && queue_list[i].State.Matrix[0, 1] == "2" && queue_list[i].State.Matrix[0, 2] == "3")
+                {
+                    if(v1 < v && v != int.MaxValue)
+                    {
+                        Random random = new Random();   
+
+                        index = i;
+                        v = v1;
+                        node = queue_list[i];
+
+                        if (random.Next(0, 101) >= 40)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        Random random = new Random();
+
+                        if (random.Next(0, 101) >= 40)
+                        {
+                            break;
+                        }
+                    }
+                }
+                else if(v1 < v)
+                {
+                    index = i;
+                    v = v1;
+                    node = queue_list[i];
+                }
+                else
+                {
+                    Random random = new Random();
+
+                    if (random.Next(0, 101) >= 95)
+                    {
+                        index = i;
+                        v = v1;
+                        node = queue_list[i];
+                    }
+                }
+            }
+
+            queue_list.RemoveAt(index);
+            return node;
+        }
+    }
+
+    class Program
+    {
+        static void IDS()
+        {
+            string res = "";
+
+            for(int depth = 0; ; ++depth)
+            {
+                DLS(depth, ref res);
+
+                if (res == "success")
+                    break;
+            }
+        }
+
+        static void DLS(int limit, ref string result)
+        {
+            string[,] goal_matrix =
+            {
+                { 1.ToString(), 2.ToString(), 3.ToString() },
+                { 4.ToString(), 5.ToString(), 6.ToString() },
+                { 7.ToString(), 8.ToString(), "".ToString() },
+            };
+
+            State goal_state = new State(goal_matrix);
+
+            string[,] current_matrix =
+            {
+                { "".ToString(), 1.ToString(), 3.ToString() },
+                { 4.ToString(), 2.ToString(), 5.ToString() },
+                { 7.ToString(), 8.ToString(), 6.ToString() },
+            };
+
+            Node current_node = new Node(current_matrix, "", 0, "");
+
+            Queue<Node> frontier = new Queue<Node>();
+            frontier.Enqueue(current_node);
+
+            List<string> reached = new List<string>();
+
+            while(frontier.Count > 0)
+            {
+                current_node = frontier.Dequeue();
+
+                PrintMatrix(current_node.State.Matrix);
+                Print("\n\n");
+
+                if(State.Heuristic_cost(current_node.State, goal_state) == 0)
+                {
+                    result = "success";
+                    Print("SUCCESS!\n");
+                    Print($"Limit = {current_node.Path_cost}\n");
+                    break;
+                }
+
+                if(current_node.Path_cost > limit)
+                {
+                    result = "fail";
+                    Print("CUT OFF!\n");
+                    break;
+                }
+
+                if(!reached.Contains(current_node.Node_ID))
+                {
+                    reached.Add(current_node.Node_ID);
+                    
+                    foreach(Node child in Node.Expansion(current_node))
+                    {
+                        frontier.Enqueue(child);
+                    }
+                }
+            }
+        }
+
+        static void BFS()
+        {
+            string[,] goal_matrix =
+            {
+                { 1.ToString(), 2.ToString(), 3.ToString() },
+                { 4.ToString(), 5.ToString(), 6.ToString() },
+                { 7.ToString(), 8.ToString(), "".ToString() },
+            };
+
+            State goal_state = new State(goal_matrix);
+
+            string[,] current_matrix =
+            {
+                { "".ToString(), 1.ToString(), 3.ToString() },
+                { 4.ToString(), 2.ToString(), 5.ToString() },
+                { 7.ToString(), 8.ToString(), 6.ToString() },
+            };
+
+            Node current_node = new Node(current_matrix, "", 0, "");
+
+            Queue<Node> frontier = new Queue<Node>();
+            frontier.Enqueue(current_node);
+
+            List<string> reached = new List<string>();
+            reached.Add(current_node.Node_ID);
+
+            int count = 0;
+
+            while(frontier.Count > 0)
+            {
+                current_node = frontier.Dequeue();
+
+                ++count;
+
+                foreach (Node child in Node.Expansion(current_node))
+                {
+                    PrintMatrix(child.State.Matrix);
+                    Print("\n\n");
+
+                    if (State.Heuristic_cost(child.State, goal_state) == 0)
+                    {
+                        Print("SUCCESS!\n");
+                        Print($"Count = {count}\n");
+                        return;
+                    }
+
+                    if (!reached.Contains(child.Node_ID))
+                    {
+                        reached.Add(child.Node_ID);
+                        frontier.Enqueue(child);
+                    }
+                }
+            }
+        }
+
+        static void Main()
+        {
+            string[,] goal_matrix =
+            {
+                { 1.ToString(), 2.ToString(), 3.ToString() },
+                { 4.ToString(), 5.ToString(), 6.ToString() },
+                { 7.ToString(), 8.ToString(), "".ToString() },
+            };
+
+            State goal_state = new State(goal_matrix);
+
+            string[,] current_matrix =
+            {
+                { 6.ToString(), 4.ToString(), 7.ToString() },
+                { 8.ToString(), 5.ToString(), "".ToString() },
+                { 3.ToString(), 2.ToString(), 1.ToString() },
+            };
+
+            Node current_node = new Node(current_matrix, "", 0, "");
+            Priority_queue frontier_queue = new Priority_queue(goal_matrix);
+            frontier_queue.queue_list.Add(current_node);
+
+            Dictionary<string, Node> reached = new Dictionary<string, Node>();
+            reached.Add(current_node.Node_ID, current_node);
+
+            int loop_count = 0;
+
+            while (frontier_queue.queue_list.Count > 0)
+            {
+                current_node = frontier_queue.Pop();
+                ++loop_count;
+
+                if(State.Heuristic_cost(current_node.State, goal_state) == 0) 
+                {
+                    break;
+                }
+
+                foreach(Node child in Node.Expansion(current_node)) 
+                {
+                    if(!reached.ContainsKey(child.Node_ID))
+                    {
+                        reached.Add(child.Node_ID, child);
+                        frontier_queue.queue_list.Add(child);
+                    }
+                    else if(child.Path_cost < reached[child.Node_ID].Path_cost)
+                    {
+                        reached[child.Node_ID] = child;
+                        frontier_queue.queue_list.Add(child);
+                    }
+                }
+            }
+            
+            string parent_id = reached["123456780"].Parent_Node_ID;
+            string current_id = "123456780";
+            int count = 0;
+
+            List<string[,]> matrices= new List<string[,]>();    
+
+            while (parent_id != "")
+            {
+                matrices.Add(reached[current_id].State.Matrix);
+
+                ++count;
+
+                current_id = reached[current_id].Parent_Node_ID;
+                parent_id = reached[current_id].Parent_Node_ID;
+            }
+
+            PrintMatrix(reached["647850321"].State.Matrix);
+            Print("\n\n");
+
+            for(int i = matrices.Count - 1; i >= 0; --i)
+            {
+                PrintMatrix(matrices[i]);
+                Print("\n\n");
+            }
+
+            Print(count.ToString());
+            Print($"\nloop_count = {loop_count}\n");
+            Print(reached.Count.ToString());
+        }
+
+        static void NoMain()
+        {
+            string[,] goal_matrix =
+            {
+                { 1.ToString(), 2.ToString(), 3.ToString() },
+                { 4.ToString(), 5.ToString(), 6.ToString() },
+                { 7.ToString(), 8.ToString(), "".ToString() },
+            };
+
+            State goal_state = new State(goal_matrix);
+
+            string[,] current_matrix =
+            {
+                { 8.ToString(), 6.ToString(), 7.ToString() },
+                { 2.ToString(), 5.ToString(), 4.ToString() },
+                { 3.ToString(), "".ToString(), 1.ToString() },
+            };
+
+            State current_state = new State(current_matrix);
+            int count = 0;
+
+            while (State.Heuristic_cost(current_state, goal_state) != 0)
+            {
+                string best_action = State.Choosing_action(current_state, goal_state);
+                current_state = State.New_State(current_state, best_action);
+                ++count;
+
+                Print($"action: {best_action}\n");
+                Print("New matrix:\n");
+                PrintMatrix(current_state.Matrix);
+                Print("\n\n");
+            }
+
+            Print($"Number of times = {count.ToString()}");
+        }
+
+        static void PrintMatrix(string[,] matrix)
+        {
+            for(int i = 0; i < matrix.GetLength(0); ++i)
+            {
+                for(int j = 0; j < matrix.GetLength(1); ++j)
+                {
+                    if (matrix[i, j] == "") Print("|  ");
+                    else Print($"|{matrix[i, j]} ");
+                }
+
+                Print("|\n");
+            }
+        }
+
+        static void Print(string text)
+        {
+            Console.Write(text);
+        }
+    }
+}
